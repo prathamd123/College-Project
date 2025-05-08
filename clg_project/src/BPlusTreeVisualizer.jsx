@@ -1,191 +1,3 @@
-// import React, { useState, useEffect } from "react";
-// import * as d3 from "d3";
-
-// class BPlusTreeNode {
-//   constructor(isLeaf = false) {
-//     this.isLeaf = isLeaf;
-//     this.keys = [];
-//     this.children = [];
-//   }
-// }
-
-// class BPlusTree {
-//   constructor(order = 3) {
-//     this.root = new BPlusTreeNode(true);
-//     this.order = order;
-//   }
-
-//   insert(value) {
-//     let root = this.root;
-//     if (root.keys.length === this.order - 1) {
-//       let newRoot = new BPlusTreeNode();
-//       newRoot.children.push(root);
-//       this.splitChild(newRoot, 0);
-//       this.root = newRoot;
-//     }
-//     this.insertNonFull(this.root, value);
-//   }
-
-//   insertNonFull(node, value) {
-//     if (node.isLeaf) {
-//       node.keys.push(value);
-//       node.keys.sort((a, b) => a - b);
-//     } else {
-//       let i = node.keys.length - 1;
-//       while (i >= 0 && value < node.keys[i]) i--;
-//       i++;
-//       if (node.children[i].keys.length === this.order - 1) {
-//         this.splitChild(node, i);
-//         if (value > node.keys[i]) i++;
-//       }
-//       this.insertNonFull(node.children[i], value);
-//     }
-//   }
-
-//   splitChild(parent, index) {
-//     let child = parent.children[index];
-//     let mid = Math.floor((this.order - 1) / 2);
-//     let newNode = new BPlusTreeNode(child.isLeaf);
-
-//     parent.keys.splice(index, 0, child.keys[mid]);
-//     parent.children.splice(index + 1, 0, newNode);
-
-//     newNode.keys = child.keys.splice(mid + 1);
-//     if (!child.isLeaf) newNode.children = child.children.splice(mid + 1);
-
-//     if (child.isLeaf) {
-//       newNode.children = child.children;
-//       child.children = [newNode];
-//     }
-//   }
-
-//   search(value) {
-//     return this._search(this.root, value);
-//   }
-
-//   _search(node, value) {
-//     let i = 0;
-//     while (i < node.keys.length && value > node.keys[i]) i++;
-//     if (i < node.keys.length && value === node.keys[i]) return node;
-//     if (node.isLeaf) return null;
-//     return this._search(node.children[i], value);
-//   }
-// }
-
-// const BPlusTreeVisualizer = () => {
-//   const [tree, setTree] = useState(new BPlusTree(3));
-//   const [inputValue, setInputValue] = useState("");
-//   const [searchValue, setSearchValue] = useState("");
-//   const [searchResult, setSearchResult] = useState(null);
-
-//   useEffect(() => {
-//     drawTree();
-//   }, [tree, searchResult]);
-
-//   const drawTree = () => {
-//     d3.select("#bptree-container").selectAll("*").remove();
-//     if (!tree.root) return;
-
-//     const svgWidth = 800;
-//     const svgHeight = 400;
-//     const svg = d3
-//       .select("#bptree-container")
-//       .append("svg")
-//       .attr("width", svgWidth)
-//       .attr("height", svgHeight);
-
-//     const drawNode = (node, x, y, depth) => {
-//       if (!node) return;
-//       const nodeWidth = 50 + node.keys.length * 30;
-//       const gap = 150 / (depth + 1);
-
-//       let rect = svg
-//         .append("rect")
-//         .attr("x", x - nodeWidth / 2)
-//         .attr("y", y)
-//         .attr("width", nodeWidth)
-//         .attr("height", 40)
-//         .attr("rx", 10)
-//         .attr("ry", 10)
-//         .style("fill", searchResult === node ? "yellow" : "lightblue")
-//         .style("stroke", "black");
-
-//       node.keys.forEach((key, i) => {
-//         svg
-//           .append("text")
-//           .attr("x", x - nodeWidth / 2 + 15 + i * 30)
-//           .attr("y", y + 25)
-//           .text(key)
-//           .style("font-size", "14px")
-//           .style("font-weight", "bold");
-//       });
-
-//       if (!node.isLeaf) {
-//         node.children.forEach((child, i) => {
-//           let childX = x - (node.children.length - 1) * gap + i * gap * 2;
-//           let childY = y + 80;
-//           svg
-//             .append("line")
-//             .attr("x1", x)
-//             .attr("y1", y + 40)
-//             .attr("x2", childX)
-//             .attr("y2", childY)
-//             .style("stroke", "black");
-//           drawNode(child, childX, childY, depth + 1);
-//         });
-//       }
-//     };
-
-//     drawNode(tree.root, svgWidth / 2, 50, 1);
-//   };
-
-//   const handleInsert = () => {
-//     if (inputValue === "") return;
-//     const newTree = Object.assign(new BPlusTree(tree.order), tree);
-//     newTree.insert(parseInt(inputValue));
-//     setTree(newTree);
-//     setInputValue("");
-//   };
-
-//   const handleSearch = () => {
-//     if (searchValue === "") return;
-//     const foundNode = tree.search(parseInt(searchValue));
-//     setSearchResult(foundNode);
-//   };
-
-//   return (
-//     <div style={{ textAlign: "center" }}>
-//       <h2>B+ Tree Visualization</h2>
-//       <input
-//         type="number"
-//         value={inputValue}
-//         onChange={(e) => setInputValue(e.target.value)}
-//         placeholder="Insert Value"
-//       />
-//       <button onClick={handleInsert}>Insert</button>
-//       <input
-//         type="number"
-//         value={searchValue}
-//         onChange={(e) => setSearchValue(e.target.value)}
-//         placeholder="Search"
-//       />
-//       <button onClick={handleSearch}>Search</button>
-//       <div
-//         id="bptree-container"
-//         style={{
-//           border: "1px solid black",
-//           marginTop: "10px",
-//           width: "100%",
-//           height: "400px",
-//         }}
-//       ></div>
-//     </div>
-//   );
-// };
-
-// export default BPlusTreeVisualizer;
-
-
 import React, { useState, useEffect } from "react";
 import * as d3 from "d3";
 
@@ -197,7 +9,7 @@ const BPlusTreeVisualizer = () => {
   const [traversalResult, setTraversalResult] = useState("");
   const [order, setOrder] = useState(4);
 
-  class BPlusNode {
+  class BPlusTreeNode {
     constructor(isLeaf = false) {
       this.isLeaf = isLeaf;
       this.keys = [];
@@ -209,29 +21,34 @@ const BPlusTreeVisualizer = () => {
   class BPlusTree {
     constructor(order) {
       this.order = order;
-      this.root = new BPlusNode(true);
+      this.root = new BPlusTreeNode(true);
+      this.minKeys = Math.ceil(order / 2) - 1;
+      this.maxKeys = order - 1;
     }
 
     insert(key) {
-      const root = this.root;
-      if (root.keys.length >= this.order - 1) {
-        const newRoot = new BPlusNode(false);
+      let root = this.root;
+      if (root.keys.length >= this.maxKeys) {
+        let newRoot = new BPlusTreeNode(false);
         newRoot.children.push(root);
         this.splitChild(newRoot, 0);
         this.root = newRoot;
+        root = newRoot;
       }
-      this.insertNonFull(this.root, key);
+      this.insertNonFull(root, key);
     }
 
     insertNonFull(node, key) {
       if (node.isLeaf) {
-        const pos = node.keys.findIndex(k => k > key);
-        node.keys.splice(pos === -1 ? node.keys.length : pos, 0, key);
+        node.keys.push(key);
+        node.keys.sort((a, b) => a - b);
       } else {
-        let i = node.keys.findIndex(k => k > key);
-        if (i === -1) i = node.children.length - 1;
+        let i = 0;
+        while (i < node.keys.length && key > node.keys[i]) {
+          i++;
+        }
         const child = node.children[i];
-        if (child.keys.length >= this.order - 1) {
+        if (child.keys.length >= this.maxKeys) {
           this.splitChild(node, i);
           if (key > node.keys[i]) i++;
         }
@@ -240,36 +57,42 @@ const BPlusTreeVisualizer = () => {
     }
 
     splitChild(parent, index) {
-      const order = this.order;
       const child = parent.children[index];
-      const newNode = new BPlusNode(child.isLeaf);
-      const mid = Math.floor((order - 1) / 2);
+      const newNode = new BPlusTreeNode(child.isLeaf);
+      const mid = Math.floor(this.order / 2);
 
-      newNode.keys = child.keys.splice(mid + (child.isLeaf ? 0 : 1));
-      if (!child.isLeaf) {
-        newNode.children = child.children.splice(mid + 1);
-      } else {
+      if (child.isLeaf) {
+        newNode.keys = child.keys.splice(mid);
         newNode.next = child.next;
         child.next = newNode;
+        parent.keys.splice(index, 0, newNode.keys[0]);
+      } else {
+        newNode.keys = child.keys.splice(mid);
+        newNode.children = child.children.splice(mid);
+        const midKey = child.keys.pop();
+        parent.keys.splice(index, 0, midKey);
       }
-
-      parent.keys.splice(index, 0, child.isLeaf ? newNode.keys[0] : child.keys.pop());
       parent.children.splice(index + 1, 0, newNode);
     }
 
     search(key) {
-      let node = this.root;
-      while (node) {
-        if (node.isLeaf) {
-          return node.keys.includes(key) ? key : null;
+      if (!this.root) return null;
+      let current = this.root;
+      while (current) {
+        let i = 0;
+        while (i < current.keys.length && key > current.keys[i]) {
+          i++;
         }
-        const i = node.keys.findIndex(k => k > key);
-        node = node.children[i === -1 ? node.children.length - 1 : i];
+        if (current.isLeaf) {
+          return i < current.keys.length && current.keys[i] === key ? key : null;
+        }
+        current = current.children[i];
       }
       return null;
     }
 
     delete(key) {
+      if (!this.root) return;
       this.deleteKey(this.root, key);
       if (!this.root.isLeaf && this.root.keys.length === 0 && this.root.children.length === 1) {
         this.root = this.root.children[0];
@@ -280,89 +103,128 @@ const BPlusTreeVisualizer = () => {
       if (node.isLeaf) {
         const index = node.keys.indexOf(key);
         if (index !== -1) node.keys.splice(index, 1);
-      } else {
-        let i = node.keys.findIndex(k => k > key);
-        if (i === -1) i = node.children.length - 1;
-        const child = node.children[i];
-        this.deleteKey(child, key);
+        return;
+      }
 
-        // Simplified deletion - no merging or borrowing for now
-        if (child.keys.length < Math.ceil(this.order / 2) - 1 && !child.isLeaf) {
-          this.balanceNodes(node, i);
+      let i = 0;
+      while (i < node.keys.length && key > node.keys[i]) {
+        i++;
+      }
+
+      const child = node.children[i];
+      if (child.keys.length <= this.minKeys) {
+        this.fillChild(node, i);
+        if (node.keys.length === 0 && !node.isLeaf && node.children.length === 1) {
+          this.root = node.children[0];
+          return this.deleteKey(this.root, key);
+        }
+      }
+      this.deleteKey(node.children[i], key);
+
+      // Update parent keys after deletion
+      if (i < node.children.length && node.children[i].isLeaf) {
+        node.keys[i - 1] = node.children[i].keys[0] || node.keys[i - 1];
+      }
+    }
+
+    fillChild(node, index) {
+      const child = node.children[index];
+      const leftSibling = index > 0 ? node.children[index - 1] : null;
+      const rightSibling = index < node.children.length - 1 ? node.children[index + 1] : null;
+
+      if (leftSibling && leftSibling.keys.length > this.minKeys) {
+        this.borrowFromLeft(node, index);
+      } else if (rightSibling && rightSibling.keys.length > this.minKeys) {
+        this.borrowFromRight(node, index);
+      } else {
+        if (rightSibling) {
+          this.merge(node, index);
+        } else if (leftSibling) {
+          this.merge(node, index - 1);
         }
       }
     }
 
-    balanceNodes(parent, index) {
-      // Basic balancing - merge with sibling if possible (simplified)
-      const child = parent.children[index];
-      if (index > 0) {
-        const left = parent.children[index - 1];
-        if (left.keys.length > Math.ceil(this.order / 2) - 1) {
-          child.keys.unshift(parent.keys[index - 1]);
-          parent.keys[index - 1] = left.keys.pop();
-          if (!child.isLeaf) child.children.unshift(left.children.pop());
-          return;
-        }
+    borrowFromLeft(node, index) {
+      const child = node.children[index];
+      const sibling = node.children[index - 1];
+
+      if (child.isLeaf) {
+        child.keys.unshift(sibling.keys.pop());
+        node.keys[index - 1] = child.keys[0];
+      } else {
+        child.keys.unshift(node.keys[index - 1]);
+        node.keys[index - 1] = sibling.keys.pop();
+        child.children.unshift(sibling.children.pop());
       }
-      if (index < parent.children.length - 1) {
-        const right = parent.children[index + 1];
-        if (right.keys.length > Math.ceil(this.order / 2) - 1) {
-          child.keys.push(parent.keys[index]);
-          parent.keys[index] = right.keys.shift();
-          if (!child.isLeaf) child.children.push(right.children.shift());
-          return;
-        }
+    }
+
+    borrowFromRight(node, index) {
+      const child = node.children[index];
+      const sibling = node.children[index + 1];
+
+      if (child.isLeaf) {
+        child.keys.push(sibling.keys.shift());
+        node.keys[index] = sibling.keys[0] || child.keys[child.keys.length - 1];
+      } else {
+        child.keys.push(node.keys[index]);
+        node.keys[index] = sibling.keys.shift();
+        child.children.push(sibling.children.shift());
       }
+    }
+
+    merge(node, index) {
+      const child = node.children[index];
+      const sibling = node.children[index + 1];
+
+      if (child.isLeaf) {
+        child.keys.push(...sibling.keys);
+        child.next = sibling.next;
+      } else {
+        child.keys.push(node.keys[index]);
+        child.keys.push(...sibling.keys);
+        child.children.push(...sibling.children);
+      }
+
+      node.keys.splice(index, 1);
+      node.children.splice(index + 1, 1);
     }
 
     inorder() {
       const result = [];
-      let node = this.root;
-      while (node && !node.isLeaf) node = node.children[0];
-      while (node) {
-        result.push(...node.keys);
-        node = node.next;
+      let current = this.root;
+      while (current && !current.isLeaf) {
+        current = current.children[0];
+      }
+      while (current) {
+        result.push(...current.keys);
+        current = current.next;
       }
       return result.join(", ");
     }
 
-    preorder() {
-      const result = [];
-      this.preorderTraversal(this.root, result);
-      return result.join(", ");
-    }
-
-    preorderTraversal(node, result) {
-      if (!node) return;
-      result.push(...node.keys);
-      if (!node.isLeaf) node.children.forEach(child => this.preorderTraversal(child, result));
-    }
-
-    postorder() {
-      const result = [];
-      this.postorderTraversal(this.root, result);
-      return result.join(", ");
-    }
-
-    postorderTraversal(node, result) {
-      if (!node) return;
-      if (!node.isLeaf) node.children.forEach(child => this.postorderTraversal(child, result));
-      result.push(...node.keys);
-    }
-
-    clone() {
+    copy() {
       const newTree = new BPlusTree(this.order);
-      newTree.root = this.cloneNode(this.root);
+      const copyNode = (node) => {
+        if (!node) return null;
+        const newNode = new BPlusTreeNode(node.isLeaf);
+        newNode.keys = [...node.keys];
+        newNode.children = node.children.map(copyNode);
+        return newNode;
+      };
+      newTree.root = copyNode(this.root);
+      let current = newTree.root;
+      while (current && !current.isLeaf) {
+        current = current.children[0];
+      }
+      let prev = null;
+      while (current) {
+        current.next = null;
+        if (prev) prev.next = current;
+        prev = current;
+        current = current.next;
+      }
       return newTree;
-    }
-
-    cloneNode(node) {
-      const newNode = new BPlusNode(node.isLeaf);
-      newNode.keys = [...node.keys];
-      if (!node.isLeaf) newNode.children = node.children.map(child => this.cloneNode(child));
-      if (node.next) newNode.next = this.cloneNode(node.next);
-      return newNode;
     }
   }
 
@@ -372,7 +234,7 @@ const BPlusTreeVisualizer = () => {
 
   const getTreeDepth = (node) => {
     if (!node || node.isLeaf) return 1;
-    return 1 + Math.max(...node.children.map(child => getTreeDepth(child)));
+    return 1 + Math.max(...node.children.map((child) => getTreeDepth(child)));
   };
 
   const drawTree = () => {
@@ -387,6 +249,7 @@ const BPlusTreeVisualizer = () => {
     const verticalSpacing = Math.min(150, Math.max(400 / depth, 80));
     const nodeWidth = 120;
     const keyWidth = 30;
+    const childSpacing = 20;
 
     const svg = d3
       .select("#tree-container")
@@ -399,24 +262,25 @@ const BPlusTreeVisualizer = () => {
     const drawNode = (node, x, y, level) => {
       if (!node) return;
 
-      const nodeWidthActual = Math.max(nodeWidth, node.keys.length * keyWidth + 20);
+      const nodeWidthActual = Math.max(
+        nodeWidth,
+        node.keys.length * keyWidth + 20
+      );
       const nodeHeight = 40;
 
-      // Draw node rectangle
       svg
         .append("rect")
         .attr("x", x - nodeWidthActual / 2)
         .attr("y", y)
         .attr("width", 0)
         .attr("height", nodeHeight)
-        .style("fill", node.isLeaf ? (node.keys.includes(searchResult) ? "#FFD700" : "#98FB98") : "#87CEEB")
+        .style("fill", node.keys.includes(searchResult) ? "#FFD700" : node.isLeaf ? "#90EE90" : "#DDA0DD")
         .style("stroke", "#333")
         .style("stroke-width", "2px")
         .transition()
         .duration(500)
         .attr("width", nodeWidthActual);
 
-      // Draw keys
       node.keys.forEach((key, i) => {
         svg
           .append("text")
@@ -433,12 +297,18 @@ const BPlusTreeVisualizer = () => {
 
       if (!node.isLeaf) {
         const childY = y + verticalSpacing;
-        const totalChildWidth = node.children.reduce((sum, child) => 
-          sum + Math.max(nodeWidth, child.keys.length * keyWidth + 20), 0);
-        
+        const totalChildWidth = node.children.reduce(
+          (sum, child) =>
+            sum + Math.max(nodeWidth, child.keys.length * keyWidth + 20) + childSpacing,
+          -childSpacing
+        );
+
         let currentX = x - totalChildWidth / 2;
         node.children.forEach((child, i) => {
-          const childWidth = Math.max(nodeWidth, child.keys.length * keyWidth + 20);
+          const childWidth = Math.max(
+            nodeWidth,
+            child.keys.length * keyWidth + 20
+          );
           const childX = currentX + childWidth / 2;
 
           svg
@@ -456,41 +326,65 @@ const BPlusTreeVisualizer = () => {
             .attr("y2", childY);
 
           setTimeout(() => drawNode(child, childX, childY, level + 1), 250);
-          currentX += childWidth;
+          currentX += childWidth + childSpacing;
         });
-      } else if (node.next) {
-        const nextX = x + nodeWidthActual + 50;
-        svg
-          .append("line")
-          .attr("x1", x + nodeWidthActual / 2)
-          .attr("y1", y + nodeHeight / 2)
-          .attr("x2", x + nodeWidthActual / 2)
-          .attr("y2", y + nodeHeight / 2)
-          .style("stroke", "#666")
-          .style("stroke-width", "2px")
-          .transition()
-          .duration(500)
-          .attr("x2", nextX - nodeWidthActual / 2)
-          .attr("y2", y + nodeHeight / 2);
-
-        setTimeout(() => drawNode(node.next, nextX, y, level), 250);
       }
     };
+
+    const leafNodes = [];
+    const collectLeaves = (node, x, y) => {
+      if (!node) return;
+      if (node.isLeaf) {
+        const nodeWidthActual = Math.max(nodeWidth, node.keys.length * keyWidth + 20);
+        leafNodes.push({ node, x, y, width: nodeWidthActual });
+      } else {
+        const totalChildWidth = node.children.reduce(
+          (sum, child) =>
+            sum + Math.max(nodeWidth, child.keys.length * keyWidth + 20) + childSpacing,
+          -childSpacing
+        );
+        let currentX = x - totalChildWidth / 2;
+        node.children.forEach((child) => {
+          const childWidth = Math.max(nodeWidth, child.keys.length * keyWidth + 20);
+          const childX = currentX + childWidth / 2;
+          collectLeaves(child, childX, y + verticalSpacing);
+          currentX += childWidth + childSpacing;
+        });
+      }
+    };
+
+    collectLeaves(tree.root, svgWidth / 2, 50);
+    leafNodes.forEach((leaf, i) => {
+      if (leaf.node.next) {
+        const nextLeaf = leafNodes[i + 1];
+        if (nextLeaf && nextLeaf.node === leaf.node.next) {
+          svg
+            .append("line")
+            .attr("x1", leaf.x + leaf.width / 2)
+            .attr("y1", leaf.y + 20)
+            .attr("x2", nextLeaf.x - nextLeaf.width / 2)
+            .attr("y2", nextLeaf.y + 20)
+            .style("stroke", "#FF4500")
+            .style("stroke-width", "2px")
+            .style("stroke-dasharray", "5,5");
+        }
+      }
+    });
 
     drawNode(tree.root, svgWidth / 2, 50, 0);
   };
 
   const handleInsert = () => {
     if (!inputValue) return;
-    const newTree = tree ? tree.clone() : new BPlusTree(order);
-    newTree.insert(parseInt(inputValue));
-    setTree(newTree);
+    const currentTree = tree || new BPlusTree(order);
+    currentTree.insert(parseInt(inputValue));
+    setTree(currentTree.copy());
     setInputValue("");
   };
 
   const handleDelete = () => {
     if (!inputValue || !tree) return;
-    const newTree = tree.clone();
+    const newTree = tree.copy();
     newTree.delete(parseInt(inputValue));
     setTree(newTree);
     setInputValue("");
@@ -507,10 +401,12 @@ const BPlusTreeVisualizer = () => {
       <h2 className="text-3xl font-bold mb-6 text-gray-800">
         B+ Tree Visualization (Order: {order})
       </h2>
-      <a href="/" className="px-4 py-2 my-2  bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+      <a
+        href="/"
+        className="mt-4 px-4 py-2 my-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+      >
         Back to Home
       </a>
-
       <div className="w-full max-w-4xl bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex flex-wrap gap-3">
           <input
@@ -550,18 +446,6 @@ const BPlusTreeVisualizer = () => {
             className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
           >
             Inorder
-          </button>
-          <button
-            onClick={() => setTraversalResult(tree?.preorder() || "")}
-            className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
-          >
-            Preorder
-          </button>
-          <button
-            onClick={() => setTraversalResult(tree?.postorder() || "")}
-            className="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 transition-colors"
-          >
-            Postorder
           </button>
           <input
             type="number"
